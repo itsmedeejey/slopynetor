@@ -100,7 +100,7 @@ func transcripe() {
 
 }
 
-func getClips() {
+func getClips(videoType string) {
 	// calling gemini for the trendy clips from the transcription
 	content, err := os.ReadFile("output/transcript.txt")
 	if err != nil {
@@ -108,16 +108,30 @@ func getClips() {
 		return
 	}
 
-	promptContent, err := os.ReadFile("podcastPrompt.txt")
+	promptGame, err := os.ReadFile("gamingPrompt.txt")
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return
+	}
+	promptPod, err := os.ReadFile("podcastPrompt.txt")
 	if err != nil {
 		fmt.Println("Error reading file:", err)
 		return
 	}
 
-	// Convert bytes to string and print
 	transcript := string(content)
-	promptText := string(promptContent)
+	promptPodcast := string(promptPod)
+	promptGaming := string(promptGame)
 
+	var promptText string
+	if videoType == "podcast" {
+		promptText = promptPodcast
+	}
+	if videoType == "gaming" {
+		promptText = promptGaming
+	}
+
+	//TODO:  have different prompts for different types of videos
 	prompt := fmt.Sprintf(`%s transcript: %s`, promptText, transcript)
 
 	client, err := genai.NewClient(
@@ -156,7 +170,6 @@ type Clip struct {
 }
 
 func cuts() {
-
 	videoPath := filepath.Join(
 		"download",
 		"video.webm",
@@ -225,10 +238,12 @@ func main() {
 		return
 	}
 
+	var vidType string = "podcast"
+
 	download(url)
 	toAudio()
 	transcripe()
-	getClips()
+	getClips(vidType)
 	cuts()
 	fmt.Println("completed!")
 }
